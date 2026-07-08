@@ -16,13 +16,13 @@ public final class SampleNetworks {
     public static TrackNetwork switzerland() {
         TrackNetwork net = new TrackNetwork();
 
-        TrackNode basel = place(net, "Basel SBB", 170, 70);
-        TrackNode olten = place(net, "Olten", 250, 210);
-        TrackNode zuerich = place(net, "Zürich HB", 480, 150);
-        TrackNode luzern = place(net, "Luzern", 400, 320);
-        TrackNode bern = place(net, "Bern", 210, 360);
-        TrackNode lausanne = place(net, "Lausanne", 120, 480);
-        TrackNode chur = place(net, "Chur", 660, 330);
+        TrackNode basel = net.addNode("Basel SBB", 170, 70);
+        TrackNode olten = net.addNode("Olten", 250, 210);
+        TrackNode zuerich = net.addNode("Zürich HB", 480, 150);
+        TrackNode luzern = net.addNode("Luzern", 400, 320);
+        TrackNode bern = net.addNode("Bern", 210, 360);
+        TrackNode lausanne = net.addNode("Lausanne", 120, 480);
+        TrackNode chur = net.addNode("Chur", 660, 330);
 
         net.addEdge(basel.id(), olten.id());
         net.addEdge(olten.id(), zuerich.id());
@@ -36,11 +36,5 @@ public final class SampleNetworks {
         net.addSignal(bernLausanne.id(), 0.4, Side.RIGHT);
 
         return net;
-    }
-
-    private static TrackNode place(TrackNetwork net, String label, double x, double y) {
-        TrackNode node = net.addNode(x, y);
-        node.setLabel(label);
-        return node;
     }
 }

@@ -29,8 +29,15 @@ public final class TrackNetwork {
     /** Adds a node at the given schematic position with an auto-generated id/label. */
     public TrackNode addNode(double x, double y) {
         String id = "N" + (++nodeCounter);
-        TrackNode node = new TrackNode(id, id, x, y);
+        TrackNode node = new TrackNode(id, x, y);
         nodes.put(id, node);
+        return node;
+    }
+
+    /** Adds a node with an explicit label at the given schematic position. */
+    public TrackNode addNode(String label, double x, double y) {
+        TrackNode node = addNode(x, y);
+        node.setLabel(label);
         return node;
     }
 
@@ -55,7 +62,7 @@ public final class TrackNetwork {
                     "Edge references unknown node: " + fromNodeId + " -> " + toNodeId);
         }
         String id = "E" + (++edgeCounter);
-        TrackEdge edge = new TrackEdge(id, fromNodeId, toNodeId, id);
+        TrackEdge edge = new TrackEdge(id, fromNodeId, toNodeId);
         edges.put(id, edge);
         return edge;
     }
@@ -81,7 +88,7 @@ public final class TrackNetwork {
             throw new IllegalArgumentException("Signal references unknown edge: " + edgeId);
         }
         String id = "S" + (++signalCounter);
-        Signal signal = new Signal(id, edgeId, position, side, id);
+        Signal signal = new Signal(id, new EdgeRef(edgeId, position, side));
         signals.put(id, signal);
         return signal;
     }

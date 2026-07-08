@@ -3,7 +3,10 @@ package com.example.vibeapp.model;
 /**
  * A track edge (Gleiskante) connecting two nodes. The direction from-node
  * &rarr; to-node defines the reference axis along which fachdaten are placed
- * (see {@link Signal}).
+ * (see {@link EdgeRef}).
+ *
+ * <p>The label defaults to the id and can be set afterwards via
+ * {@link #setLabel(String)}.
  */
 public final class TrackEdge {
 
@@ -12,11 +15,11 @@ public final class TrackEdge {
     private final String toNodeId;
     private String label;
 
-    public TrackEdge(String id, String fromNodeId, String toNodeId, String label) {
+    public TrackEdge(String id, String fromNodeId, String toNodeId) {
         this.id = id;
         this.fromNodeId = fromNodeId;
         this.toNodeId = toNodeId;
-        this.label = label;
+        this.label = id;
     }
 
     public String id() {

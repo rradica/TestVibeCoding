@@ -17,6 +17,16 @@ class TrackNetworkTest {
     }
 
     @Test
+    void addNodeWithLabelSetsLabelAndIsLookupable() {
+        TrackNetwork net = new TrackNetwork();
+        TrackNode node = net.addNode("Olten", 5, 6);
+
+        assertEquals("Olten", node.label());
+        assertEquals(node, net.node(node.id()).orElseThrow());
+        assertTrue(net.node("missing").isEmpty());
+    }
+
+    @Test
     void addEdgeRequiresExistingNodes() {
         TrackNetwork net = new TrackNetwork();
         TrackNode a = net.addNode(0, 0);

@@ -25,7 +25,7 @@ The layout is **topological, not geographic**: node coordinates are schematic
 
 ```
 com.example.vibeapp            App            JavaFX entry point
-com.example.vibeapp.model      TrackNode, TrackEdge, Signal, Side,
+com.example.vibeapp.model      TrackNode, TrackEdge, Signal, Side, EdgeRef,
                                TrackNetwork   pure domain model (no JavaFX imports)
                                SampleNetworks example topological Switzerland
 com.example.vibeapp.geometry   Vec2, Geometry linear-referencing math (no JavaFX)
@@ -129,22 +129,33 @@ The toolbar selects a **tool**; clicks on the canvas act according to it:
 
 ## Quality tooling
 
-Static analysis and coverage run as part of the Maven build so the guardrails
-above and common bug patterns are caught automatically, not just in review.
+Static analysis and coverage run in the `verify` phase, so the guardrails above
+and common bug patterns fail the build automatically, not just in review. Run
+everything with **`mvn verify`**. Config lives under `config/`.
 
-- **Checkstyle** (`maven-checkstyle-plugin`) — enforces the architecture
-  guardrails directly: `ParameterNumber` (max 3, methods) and `FileLength`
-  (max 500). Bound to the `verify` phase; a violation fails the build.
-- **SpotBugs** (`spotbugs-maven-plugin`) — bytecode static analysis for likely
-  bugs (null-dereferences, resource leaks, bad equals/hashCode, …).
-- **PMD** (`maven-pmd-plugin`) — complementary source-level rules and duplicate
-  detection (CPD).
-- **JaCoCo** (`jacoco-maven-plugin`) — test coverage report, with an optional
-  minimum-coverage gate on `verify`.
+| Tool | Plugin | Enforces | Config |
+| ---- | ------ | -------- | ------ |
+| **Checkstyle** | `maven-checkstyle-plugin` | The guardrails: `ParameterNumber` max 3 (methods **and** constructors) + `FileLength` max 500 | `config/checkstyle/checkstyle.xml` |
+| **PMD** | `maven-pmd-plugin` | Dead code + likely bugs (curated, small ruleset) | `config/pmd/ruleset.xml` |
+| **SpotBugs** | `spotbugs-maven-plugin` | Bytecode bug patterns (effort Max, threshold Medium) | `config/spotbugs/exclude.xml` |
+| **JaCoCo** | `jacoco-maven-plugin` | Test coverage ≥ 80 % line coverage on `model` + `geometry` (`view`/`App` excluded as they need the running UI) | inline in `pom.xml` |
 
-Run everything with `mvn verify`. Keep the rule set small and meaningful — every
-enabled rule must earn its place; suppress with a documented reason, don't
-weaken the guardrails globally.
+Conventions for the tooling:
+
+- **Keep rulesets small and meaningful** — every enabled rule must earn its
+  place. Checkstyle owns the parameter/size guardrails; PMD does **not** repeat
+  them (no overlap/conflict).
+- **Suppress narrowly and with a documented reason; never weaken a guardrail
+  globally.** How to suppress each tool:
+  - Checkstyle: `@SuppressWarnings("checkstyle:ParameterNumber")` on the member,
+    with a comment saying why (see `Geometry.offsetPoint`, `NetworkRenderer.render`).
+  - PMD: a `violationSuppressXPath` in the ruleset (e.g. `@FXML` methods are
+    reflectively invoked, so they are exempt from `UnusedPrivateMethod`).
+  - SpotBugs: a `<Match>` in `config/spotbugs/exclude.xml`.
+- **`module-info.java` is excluded from Checkstyle** (it is not a class).
+- The two known guardrail exceptions (`offsetPoint`, `render`, both 5 params)
+  are suppressed intentionally; a future refactor may fold their arguments into
+  value objects (`Segment`, a view-state object).
 
 ## Things to avoid
 

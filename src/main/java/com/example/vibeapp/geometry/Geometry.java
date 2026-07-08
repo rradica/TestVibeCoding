@@ -51,6 +51,9 @@ public final class Geometry {
      * <p>Screen coordinates (y grows downward): {@code LEFT} of travel direction
      * points to smaller y.
      */
+    // Guardrail exception: 5 parameters. Kept as a focused geometric primitive
+    // for now; a future refactor may fold (a, b) into a Segment value object.
+    @SuppressWarnings("checkstyle:ParameterNumber")
     public static Vec2 offsetPoint(Vec2 a, Vec2 b, double t, double offset, Side side) {
         Vec2 base = pointAt(a, b, t);
         double dx = b.x() - a.x();

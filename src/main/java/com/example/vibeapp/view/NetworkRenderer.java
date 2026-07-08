@@ -36,6 +36,9 @@ final class NetworkRenderer {
         this.gc.setFont(Font.font(12));
     }
 
+    // Guardrail exception: 5 parameters. A future refactor may bundle the
+    // canvas size and highlight ids into a small view-state value object.
+    @SuppressWarnings("checkstyle:ParameterNumber")
     void render(TrackNetwork network, double width, double height,
                 String highlightedNodeId, String pendingEdgeNodeId) {
         gc.setFill(BACKGROUND);
