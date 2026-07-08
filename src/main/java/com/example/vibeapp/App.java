@@ -9,19 +9,19 @@ import javafx.scene.Scene;
 import javafx.stage.Stage;
 
 /**
- * Application entry point. Bootstraps the JavaFX runtime, loads the main view
- * and shows the primary window.
+ * Application entry point. Bootstraps the JavaFX runtime, loads the network
+ * editor view and shows the primary window.
  */
 public class App extends Application {
 
     @Override
     public void start(Stage stage) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("main-view.fxml"));
-        Scene scene = new Scene(loader.load(), 480, 320);
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("network-editor.fxml"));
+        Scene scene = new Scene(loader.load(), 900, 640);
         scene.getStylesheets().add(
                 Objects.requireNonNull(getClass().getResource("styles.css")).toExternalForm());
 
-        stage.setTitle("Vibe Coding App");
+        stage.setTitle("Gleisnetz-Editor");
         stage.setScene(scene);
         stage.show();
     }

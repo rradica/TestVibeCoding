@@ -5,93 +5,116 @@ repository. Read this before making changes.
 
 ## Project overview
 
-**Vibe Coding App** is a desktop **frontend application built with JavaFX**.
-It is an early-stage project — the goal is to grow it cleanly and keep the
-structure understandable as it evolves.
+**Gleisnetz-Editor** is a desktop **JavaFX** application for drawing a
+**topological rail network** and attaching domain data to it:
 
-- **Language:** Java 21 (LTS)
-- **UI toolkit:** JavaFX 21 (FXML + controllers + CSS)
-- **Build tool:** Maven
-- **Testing:** JUnit 5 (Jupiter)
-- **Module system:** JPMS is used (`src/main/java/module-info.java`)
+- **Knoten / nodes** (`TrackNode`) — points in the network (stations, junctions).
+- **Kanten / edges** (`TrackEdge`) — track edges connecting two nodes.
+- **Fachdaten** such as **signals** (`Signal`) positioned by **linear
+  referencing**: a signal belongs to an edge and sits at a relative position
+  (0.0 = from-node … 1.0 = to-node) on a chosen side. It has no coordinates of
+  its own, so it stays correct when nodes move.
 
-## Repository layout
+The layout is **topological, not geographic**: node coordinates are schematic
+(canvas pixels) and express connectivity, not real-world position.
+
+- **Language:** Java 21 (LTS) · **UI:** JavaFX 21 (FXML + Canvas + CSS)
+- **Build:** Maven · **Tests:** JUnit 5 · **Modules:** JPMS
+
+## Architecture (keep these layers separate)
 
 ```
-pom.xml                                  Maven build definition
-src/main/java/module-info.java           JPMS module descriptor
-src/main/java/com/example/vibeapp/
-    App.java                             Application entry point (extends Application)
-    MainController.java                  Controller for the main view (view wiring only)
-    Greeter.java                         Example of pure, testable domain logic
+com.example.vibeapp            App            JavaFX entry point
+com.example.vibeapp.model      TrackNode, TrackEdge, Signal, Side,
+                               TrackNetwork   pure domain model (no JavaFX imports)
+                               SampleNetworks example topological Switzerland
+com.example.vibeapp.geometry   Vec2, Geometry linear-referencing math (no JavaFX)
+com.example.vibeapp.view       NetworkEditorController  tool state + mouse input
+                               NetworkRenderer          draws the model on a Canvas
+```
+
+- **`model` and `geometry` are UI-free** and fully unit-tested — this is the
+  core invariant. Keep JavaFX types out of them so the domain logic stays
+  testable without the toolkit.
+- **`view` is the only package that may import JavaFX.** The controller owns
+  transient editing state (active tool, drag/edge-pending selection) and turns
+  input into model operations; the renderer only draws.
+
+### Resources & module wiring
+
+```
 src/main/resources/com/example/vibeapp/
-    main-view.fxml                       Main window layout
-    styles.css                           Stylesheet for the UI
-src/test/java/com/example/vibeapp/
-    GreeterTest.java                     Unit tests for domain logic
+    network-editor.fxml   toolbar + canvas + status bar (fx:controller = NetworkEditorController)
+    styles.css            dark theme
+src/main/java/module-info.java   opens ...view to javafx.fxml; exports base package
 ```
-
-The base package is `com.example.vibeapp`. Rename it deliberately (and update
-`module-info.java`, the FXML `fx:controller`, and `mainClass` in `pom.xml`) if
-the project gets a real name — do not leave a half-renamed package.
 
 ## Commands
 
-Run all commands from the repository root.
+Run from the repository root.
 
 | Task                | Command             |
 | ------------------- | ------------------- |
 | Build               | `mvn compile`       |
 | Run the tests       | `mvn test`          |
-| Full verify (build + test) | `mvn verify` |
+| Full verify         | `mvn verify`        |
 | Run the app         | `mvn javafx:run`    |
-| Clean build outputs | `mvn clean`         |
+| Clean               | `mvn clean`         |
 
-> Note: `mvn javafx:run` needs a graphical display. In a headless environment
-> (like CI or a remote container) it will fail to open a window — that is
-> expected. Use `mvn test` / `mvn verify` to validate changes there.
+> `mvn javafx:run` needs a graphical display. In a headless environment it will
+> not open a window — use `mvn test` / `mvn verify` there. (A scene can be
+> rendered headless via `Scene.snapshot` under `xvfb-run` with
+> `-Dprism.order=sw` if a preview image is needed.)
+
+## Editing model (how the UI works)
+
+The toolbar selects a **tool**; clicks on the canvas act according to it:
+
+- **Auswahl (SELECT):** click a node and drag to move it.
+- **Knoten (NODE):** click empty space to add a node.
+- **Kante (EDGE):** click a start node, then a target node to connect them.
+- **Signal (SIGNAL):** click on/near an edge; the signal is placed at the
+  nearest position along that edge (`Geometry.nearestParam`).
+
+`Beispielnetz` reloads the sample Switzerland; `Leeren` empties the network.
 
 ## Conventions (priority: clean & structured)
 
-- **Separate logic from UI.** Keep business/domain logic in plain Java classes
-  (see `Greeter`) with **no JavaFX imports**, so it can be unit-tested without
-  starting the toolkit. Controllers should only wire that logic to the view.
-- **Every non-trivial class or logic change gets a test.** Put tests under
-  `src/test/java`, mirroring the main package. Name them `<ClassName>Test`.
-- **FXML for layout, CSS for styling.** Avoid hard-coding colors, fonts, or
-  sizes in Java; put them in `styles.css`. Build screens in `.fxml` files with a
-  matching controller rather than constructing large scene graphs in code.
-- **Keep `module-info.java` correct.** New packages that JavaFX must reflect
-  over (controllers, FXML-bound classes) need an `opens` entry. New third-party
-  modules need a `requires` entry.
-- **Code style:** 4-space indentation, one top-level class per file, standard
-  Java naming (`PascalCase` types, `camelCase` members, `UPPER_SNAKE_CASE`
-  constants). Add a short Javadoc to public classes and non-obvious methods.
-- **Small, focused commits** with clear messages describing the *why*.
+- **Domain logic stays in `model` / `geometry` with no JavaFX imports**, so it
+  can be unit-tested. Controllers only wire logic to the view.
+- **Every non-trivial class or logic change gets a test** under
+  `src/test/java`, mirroring the package. Name them `<ClassName>Test`.
+- **Geometry lives in `Geometry`** as pure, side-effect-free static methods —
+  add new linear-referencing math there and test it, don't inline it in the view.
+- **FXML for layout, CSS for styling.** Don't hard-code colors/sizes in Java;
+  put them in `styles.css` and `*.fxml`.
+- **Keep `module-info.java` correct.** New FXML-bound packages need an `opens`
+  entry; new third-party modules need a `requires` entry.
+- **Style:** 4-space indent, one top-level class per file, standard Java naming,
+  short Javadoc on public classes and non-obvious methods. Small, focused commits.
 
 ## Definition of done
 
-Before considering a change complete:
-
 1. `mvn verify` passes (compiles cleanly, all tests green).
-2. New or changed logic is covered by a test.
-3. `module-info.java`, FXML `fx:controller` references, and `pom.xml`
-   `mainClass` are consistent with the code.
-4. No unused imports, dead code, or commented-out blocks left behind.
+2. New or changed logic is covered by a test in `model` or `geometry`.
+3. `module-info.java`, FXML `fx:controller`, and `pom.xml` `mainClass` stay
+   consistent with the code.
+4. No unused imports, dead code, or leftover commented-out blocks.
 
-## Good first tasks / how to extend
+## How to extend
 
-- **Add a screen:** create `foo-view.fxml` + `FooController` in the resource and
-  Java package, load it from `App` or via navigation.
-- **Add logic:** create a plain class + its `*Test`, then call it from a
-  controller.
-- **Add a dependency:** add it to `pom.xml`, then add a `requires` line in
-  `module-info.java`.
+- **New fachdatum type** (e.g. a balise or speed board): add a model class in
+  `model` referencing an edge + relative position (mirror `Signal`), store it in
+  `TrackNetwork`, render it in `NetworkRenderer`, add a tool in the controller.
+- **New geometry** (e.g. curved edges, distance-in-meters): add pure methods to
+  `Geometry` (+ tests) before touching the view.
+- **New screen:** add `*-view.fxml` + a controller in `view`, load it from `App`.
+- **New dependency:** add it to `pom.xml` and a `requires` line in `module-info.java`.
 
 ## Things to avoid
 
-- Do not put business logic or magic values directly inside controllers or
-  `App`.
+- Do not import JavaFX into `model` or `geometry`.
+- Do not give fachdaten absolute coordinates — reference them to an edge.
+- Do not put geometry math or magic values directly in controllers.
 - Do not commit build output (`target/`) or IDE files — they are gitignored.
-- Do not add a dependency without also updating `module-info.java`.
-- Do not bypass FXML by building complex UIs entirely in Java code.
+- Do not add a dependency without updating `module-info.java`.
