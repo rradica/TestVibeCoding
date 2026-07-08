@@ -49,6 +49,22 @@ src/main/resources/com/example/vibeapp/
 src/main/java/module-info.java   opens ...view to javafx.fxml; exports base package
 ```
 
+## Architecture guardrails
+
+Hard limits that keep classes and methods small and readable. New and changed
+code must respect them — refactor rather than exceed them.
+
+- **Methods: at most 3 parameters.** If a method needs more, introduce a
+  parameter object / small record, or split the method. The limit targets
+  methods; a simple data holder's constructor may carry the fields it needs, but
+  when it would exceed ~4 prefer a builder, a factory, or a `record`.
+- **Classes: at most 500 lines of code (LOC).** A class that grows past this is
+  doing too much — split it by responsibility.
+
+These limits are meant to be enforced by static analysis in the build (see
+[Quality tooling](#quality-tooling)); `mvn verify` should fail on a violation
+rather than relying on review to catch it.
+
 ## Commands
 
 Run from the repository root.
@@ -110,6 +126,25 @@ The toolbar selects a **tool**; clicks on the canvas act according to it:
   `Geometry` (+ tests) before touching the view.
 - **New screen:** add `*-view.fxml` + a controller in `view`, load it from `App`.
 - **New dependency:** add it to `pom.xml` and a `requires` line in `module-info.java`.
+
+## Quality tooling
+
+Static analysis and coverage run as part of the Maven build so the guardrails
+above and common bug patterns are caught automatically, not just in review.
+
+- **Checkstyle** (`maven-checkstyle-plugin`) — enforces the architecture
+  guardrails directly: `ParameterNumber` (max 3, methods) and `FileLength`
+  (max 500). Bound to the `verify` phase; a violation fails the build.
+- **SpotBugs** (`spotbugs-maven-plugin`) — bytecode static analysis for likely
+  bugs (null-dereferences, resource leaks, bad equals/hashCode, …).
+- **PMD** (`maven-pmd-plugin`) — complementary source-level rules and duplicate
+  detection (CPD).
+- **JaCoCo** (`jacoco-maven-plugin`) — test coverage report, with an optional
+  minimum-coverage gate on `verify`.
+
+Run everything with `mvn verify`. Keep the rule set small and meaningful — every
+enabled rule must earn its place; suppress with a documented reason, don't
+weaken the guardrails globally.
 
 ## Things to avoid
 
