@@ -21,6 +21,13 @@ The layout is **topological, not geographic**: node coordinates are schematic
 - **Language:** Java 21 (LTS) · **UI:** JavaFX 21 (FXML + Canvas + CSS)
 - **Build:** Maven · **Tests:** JUnit 5 · **Modules:** JPMS
 
+## Feature requirements
+
+Requirements for new features are documented in the [`Features/`](./Features/)
+folder — one Markdown file per feature. Start from the template
+[`Features/feature-vorlage.md`](./Features/feature-vorlage.md); see
+[`Features/README.md`](./Features/README.md) for the workflow.
+
 ## Architecture (keep these layers separate)
 
 ```
