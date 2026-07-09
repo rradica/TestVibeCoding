@@ -17,6 +17,7 @@
 
     <fx:define>
         <ToggleGroup fx:id="toolGroup"/>
+        <ToggleGroup fx:id="sideGroup"/>
     </fx:define>
 
     <top>
@@ -25,6 +26,10 @@
             <ToggleButton fx:id="nodeButton" text="Knoten" toggleGroup="$toolGroup"/>
             <ToggleButton fx:id="edgeButton" text="Kante" toggleGroup="$toolGroup"/>
             <ToggleButton fx:id="signalButton" text="Signal" toggleGroup="$toolGroup"/>
+            <Separator orientation="VERTICAL"/>
+            <Label text="Signalseite:"/>
+            <ToggleButton fx:id="leftSideButton" text="Links" toggleGroup="$sideGroup"/>
+            <ToggleButton fx:id="rightSideButton" text="Rechts" toggleGroup="$sideGroup"/>
             <Separator orientation="VERTICAL"/>
             <Button text="Beispielnetz" onAction="#onLoadSample"/>
             <Button text="Leeren" onAction="#onClear"/>
