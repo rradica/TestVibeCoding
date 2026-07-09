@@ -1,5 +1,7 @@
 package com.example.vibeapp.view;
 
+import java.util.Objects;
+
 import com.example.vibeapp.geometry.Vec2;
 
 import javafx.scene.canvas.GraphicsContext;
@@ -23,7 +25,7 @@ final class Giraffe {
     private final GraphicsContext gc;
 
     Giraffe(GraphicsContext gc) {
-        this.gc = gc;
+        this.gc = Objects.requireNonNull(gc, "gc must not be null");
     }
 
     /**

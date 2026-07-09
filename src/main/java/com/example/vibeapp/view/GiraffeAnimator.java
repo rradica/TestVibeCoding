@@ -1,5 +1,7 @@
 package com.example.vibeapp.view;
 
+import java.util.Objects;
+
 import com.example.vibeapp.geometry.Easing;
 import com.example.vibeapp.geometry.Vec2;
 
@@ -35,8 +37,8 @@ final class GiraffeAnimator {
     private long startNanos = -1L;
 
     GiraffeAnimator(GraphicsContext gc, Runnable baseRedraw) {
-        this.gc = gc;
-        this.baseRedraw = baseRedraw;
+        this.gc = Objects.requireNonNull(gc, "gc must not be null");
+        this.baseRedraw = Objects.requireNonNull(baseRedraw, "baseRedraw must not be null");
         this.giraffe = new Giraffe(gc);
         this.timer = new AnimationTimer() {
             @Override
@@ -52,6 +54,8 @@ final class GiraffeAnimator {
      * still running it is finished first so its element is not lost.
      */
     void play(DrawTarget target, Runnable onComplete) {
+        Objects.requireNonNull(target, "target must not be null");
+        Objects.requireNonNull(onComplete, "onComplete must not be null");
         finishNow();
         this.target = target;
         this.onComplete = onComplete;
@@ -125,7 +129,7 @@ final class GiraffeAnimator {
         Vec2 base = target.start();
         Vec2 tip = base.lerp(target.end(), t);
         gc.setStroke(NetworkRenderer.SIGNAL);
-        gc.setLineWidth(1.5);
+        gc.setLineWidth(1.0);
         gc.strokeLine(base.x(), base.y(), tip.x(), tip.y());
         double r = NetworkRenderer.SIGNAL_RADIUS * t;
         gc.setFill(NetworkRenderer.SIGNAL);

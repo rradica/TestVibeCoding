@@ -61,6 +61,13 @@ public class NetworkEditorController {
     private void initialize() {
         renderer = new NetworkRenderer(canvas.getGraphicsContext2D());
         animator = new GiraffeAnimator(canvas.getGraphicsContext2D(), this::redraw);
+        // Stop a running animation timer once the canvas leaves the scene, so it
+        // does not keep firing in the background after the window is closed.
+        canvas.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene == null) {
+                animator.finishNow();
+            }
+        });
 
         // A Canvas is not resizable, so as a managed child it would pin the
         // holder's minimum size and stop the window from shrinking. Take it out
@@ -130,6 +137,9 @@ public class NetworkEditorController {
         if (event.getButton() != MouseButton.PRIMARY) {
             return;
         }
+        // Commit any element still being drawn before hit-testing, so a fast
+        // second click sees the pending element and cannot create a duplicate.
+        animator.finishNow();
         double x = event.getX();
         double y = event.getY();
         switch (tool) {
