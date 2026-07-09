@@ -16,6 +16,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Toggle;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 
@@ -56,11 +57,18 @@ public class NetworkEditorController {
     private void initialize() {
         renderer = new NetworkRenderer(canvas.getGraphicsContext2D());
 
-        // Keep the canvas the size of its holder and redraw on resize.
-        canvas.widthProperty().bind(canvasHolder.widthProperty());
-        canvas.heightProperty().bind(canvasHolder.heightProperty());
-        canvas.widthProperty().addListener((obs, old, now) -> redraw());
-        canvas.heightProperty().addListener((obs, old, now) -> redraw());
+        // A Canvas is not resizable, so as a managed child it would pin the
+        // holder's minimum size and stop the window from shrinking. Take it out
+        // of layout and drive its size from the holder manually instead.
+        canvas.setManaged(false);
+        canvasHolder.widthProperty().addListener((obs, old, now) -> {
+            canvas.setWidth(now.doubleValue());
+            redraw();
+        });
+        canvasHolder.heightProperty().addListener((obs, old, now) -> {
+            canvas.setHeight(now.doubleValue());
+            redraw();
+        });
 
         selectButton.setUserData(Tool.SELECT);
         nodeButton.setUserData(Tool.NODE);
@@ -91,10 +99,14 @@ public class NetworkEditorController {
     }
 
     private void onMousePressed(MouseEvent event) {
+        // Ignore secondary/middle clicks so they can't create elements by accident.
+        if (event.getButton() != MouseButton.PRIMARY) {
+            return;
+        }
         double x = event.getX();
         double y = event.getY();
         switch (tool) {
-            case NODE -> network.addNode(x, y);
+            case NODE -> addNodeOnEmptySpace(x, y);
             case EDGE -> handleEdgeClick(x, y);
             case SIGNAL -> handleSignalClick(x, y);
             case SELECT -> {
@@ -110,6 +122,14 @@ public class NetworkEditorController {
         if (tool == Tool.SELECT && draggedNode != null) {
             draggedNode.moveTo(event.getX(), event.getY());
             redraw();
+        }
+    }
+
+    private void addNodeOnEmptySpace(double x, double y) {
+        // Per the editing model, the NODE tool only adds nodes on empty space —
+        // clicking an existing node must not stack an overlapping duplicate.
+        if (findNodeAt(x, y).isEmpty()) {
+            network.addNode(x, y);
         }
     }
 
@@ -135,8 +155,11 @@ public class NetworkEditorController {
         double closestParam = 0.0;
 
         for (TrackEdge edge : network.edges()) {
-            TrackNode from = network.node(edge.fromNodeId()).orElseThrow();
-            TrackNode to = network.node(edge.toNodeId()).orElseThrow();
+            TrackNode from = network.node(edge.fromNodeId()).orElse(null);
+            TrackNode to = network.node(edge.toNodeId()).orElse(null);
+            if (from == null || to == null) {
+                continue;
+            }
             Vec2 a = new Vec2(from.x(), from.y());
             Vec2 b = new Vec2(to.x(), to.y());
             double distance = Geometry.distanceToSegment(p, a, b);

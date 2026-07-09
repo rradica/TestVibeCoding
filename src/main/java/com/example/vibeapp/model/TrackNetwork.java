@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -54,9 +55,13 @@ public final class TrackNetwork {
     /**
      * Adds an edge between two existing nodes.
      *
-     * @throws IllegalArgumentException if either node id is unknown
+     * @throws IllegalArgumentException if either node id is unknown, or if both
+     *                                  ids are equal (a self-loop is invalid)
      */
     public TrackEdge addEdge(String fromNodeId, String toNodeId) {
+        if (Objects.equals(fromNodeId, toNodeId)) {
+            throw new IllegalArgumentException("Edge cannot be a self-loop on node: " + fromNodeId);
+        }
         if (!nodes.containsKey(fromNodeId) || !nodes.containsKey(toNodeId)) {
             throw new IllegalArgumentException(
                     "Edge references unknown node: " + fromNodeId + " -> " + toNodeId);

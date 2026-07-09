@@ -34,6 +34,13 @@ class TrackNetworkTest {
     }
 
     @Test
+    void addEdgeRejectsSelfLoops() {
+        TrackNetwork net = new TrackNetwork();
+        TrackNode a = net.addNode(0, 0);
+        assertThrows(IllegalArgumentException.class, () -> net.addEdge(a.id(), a.id()));
+    }
+
+    @Test
     void addSignalIsBoundToAnEdgeAndClampsPosition() {
         TrackNetwork net = new TrackNetwork();
         TrackNode a = net.addNode(0, 0);
