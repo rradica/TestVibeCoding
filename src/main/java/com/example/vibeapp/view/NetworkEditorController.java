@@ -43,6 +43,9 @@ public class NetworkEditorController {
     @FXML private ToggleButton nodeButton;
     @FXML private ToggleButton edgeButton;
     @FXML private ToggleButton signalButton;
+    @FXML private ToggleGroup sideGroup;
+    @FXML private ToggleButton leftSideButton;
+    @FXML private ToggleButton rightSideButton;
     @FXML private Label statusLabel;
 
     private TrackNetwork network = SampleNetworks.switzerland();
@@ -77,6 +80,11 @@ public class NetworkEditorController {
         toolGroup.selectedToggleProperty().addListener((obs, old, now) -> onToolChanged(old, now));
         toolGroup.selectToggle(selectButton);
 
+        leftSideButton.setUserData(Side.LEFT);
+        rightSideButton.setUserData(Side.RIGHT);
+        sideGroup.selectedToggleProperty().addListener((obs, old, now) -> onSideChanged(old, now));
+        sideGroup.selectToggle(rightSideButton);
+
         canvas.setOnMousePressed(this::onMousePressed);
         canvas.setOnMouseDragged(this::onMouseDragged);
         canvas.setOnMouseReleased(event -> draggedNode = null);
@@ -96,6 +104,21 @@ public class NetworkEditorController {
         highlightedNodeId = null;
         updateStatus();
         redraw();
+    }
+
+    private void onSideChanged(Toggle old, Toggle now) {
+        // Never allow a fully deselected side; keep the last choice instead.
+        if (now == null) {
+            sideGroup.selectToggle(old);
+            return;
+        }
+        updateStatus();
+    }
+
+    /** The side newly placed signals are attached to, driven by the toolbar. */
+    private Side selectedSide() {
+        Toggle selected = sideGroup.getSelectedToggle();
+        return selected != null ? (Side) selected.getUserData() : Side.RIGHT;
     }
 
     private void onMousePressed(MouseEvent event) {
@@ -171,7 +194,7 @@ public class NetworkEditorController {
         }
 
         if (closestEdge != null) {
-            network.addSignal(closestEdge.id(), closestParam, Side.RIGHT);
+            network.addSignal(closestEdge.id(), closestParam, selectedSide());
         }
     }
 
@@ -221,7 +244,8 @@ public class NetworkEditorController {
             case EDGE -> pendingEdgeNode == null
                     ? "Kante: Startknoten anklicken."
                     : "Kante: Zielknoten anklicken (Start: " + pendingEdgeNode.label() + ").";
-            case SIGNAL -> "Signal: Auf eine Gleiskante klicken, um ein Signal zu setzen.";
+            case SIGNAL -> "Signal: Auf eine Gleiskante klicken, um ein Signal zu setzen (Seite: "
+                    + (selectedSide() == Side.LEFT ? "Links" : "Rechts") + ").";
         };
         statusLabel.setText(String.format("%s   |   Knoten: %d  Kanten: %d  Signale: %d",
                 hint, network.nodes().size(), network.edges().size(), network.signals().size()));
