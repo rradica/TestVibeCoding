@@ -18,13 +18,15 @@ import javafx.scene.text.Font;
 final class NetworkRenderer {
 
     static final double NODE_RADIUS = 9.0;
-    private static final double SIGNAL_OFFSET = 20.0;
-    private static final double SIGNAL_RADIUS = 5.0;
+    // Package-private: the giraffe draw animation previews new elements and needs
+    // to match the renderer's geometry and palette exactly.
+    static final double SIGNAL_OFFSET = 20.0;
+    static final double SIGNAL_RADIUS = 5.0;
 
     private static final Color BACKGROUND = Color.web("#11111b");
-    private static final Color EDGE = Color.web("#7f849c");
-    private static final Color NODE = Color.web("#89b4fa");
-    private static final Color SIGNAL = Color.web("#f38ba8");
+    static final Color EDGE = Color.web("#7f849c");
+    static final Color NODE = Color.web("#89b4fa");
+    static final Color SIGNAL = Color.web("#f38ba8");
     private static final Color TEXT = Color.web("#cdd6f4");
     private static final Color HIGHLIGHT = Color.web("#f9e2af");
     private static final Color PENDING = Color.web("#a6e3a1");
