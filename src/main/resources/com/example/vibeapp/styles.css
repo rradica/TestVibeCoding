@@ -1,0 +1,33 @@
+.root {
+    -fx-background-color: #1e1e2e;
+}
+
+.tool-bar {
+    -fx-background-color: #181825;
+    -fx-padding: 6px 8px;
+}
+
+.tool-bar .toggle-button,
+.tool-bar .button {
+    -fx-background-radius: 6px;
+    -fx-text-fill: #cdd6f4;
+    -fx-background-color: #313244;
+    -fx-cursor: hand;
+}
+
+.tool-bar .toggle-button:selected {
+    -fx-background-color: #89b4fa;
+    -fx-text-fill: #1e1e2e;
+    -fx-font-weight: bold;
+}
+
+.canvas-holder {
+    -fx-background-color: #11111b;
+}
+
+.status-bar {
+    -fx-padding: 6px 12px;
+    -fx-text-fill: #bac2de;
+    -fx-background-color: #181825;
+    -fx-font-size: 12px;
+}

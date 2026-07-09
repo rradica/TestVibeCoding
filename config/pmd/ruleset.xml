@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<ruleset name="vibeapp"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0
+                             https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+
+    <description>
+        Curated, high-signal PMD rules. Kept small on purpose: PMD catches likely
+        bugs and dead code here; the parameter/size guardrails are owned by
+        Checkstyle so the two tools do not overlap or conflict.
+    </description>
+
+    <!-- Likely bugs -->
+    <rule ref="category/java/errorprone.xml/EmptyCatchBlock"/>
+    <rule ref="category/java/errorprone.xml/CloseResource"/>
+    <rule ref="category/java/errorprone.xml/OverrideBothEqualsAndHashcode"/>
+    <rule ref="category/java/errorprone.xml/CompareObjectsWithEquals"/>
+
+    <!-- Dead code -->
+    <rule ref="category/java/bestpractices.xml/UnusedLocalVariable"/>
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateField"/>
+    <rule ref="category/java/bestpractices.xml/UnusedPrivateMethod">
+        <!-- @FXML methods are invoked reflectively by JavaFX, not from code. -->
+        <properties>
+            <property name="violationSuppressXPath"
+                      value=".[ModifierList/Annotation[@SimpleName='FXML']]"/>
+        </properties>
+    </rule>
+    <rule ref="category/java/bestpractices.xml/UnusedFormalParameter"/>
+</ruleset>

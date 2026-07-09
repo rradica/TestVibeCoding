@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<FindBugsFilter>
+    <!--
+      The domain model (TrackNode, TrackEdge, Signal) deliberately hands out its
+      mutable entities so the editor can move nodes and edit signals in place.
+      Exposing those references is intended here, not a defect.
+    -->
+    <Match>
+        <Bug pattern="EI_EXPOSE_REP,EI_EXPOSE_REP2"/>
+    </Match>
+</FindBugsFilter>
