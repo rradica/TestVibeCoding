@@ -50,6 +50,7 @@ public class NetworkEditorController {
 
     private TrackNetwork network = SampleNetworks.switzerland();
     private NetworkRenderer renderer;
+    private GiraffeAnimator animator;
 
     private Tool tool = Tool.SELECT;
     private TrackNode draggedNode;
@@ -59,6 +60,14 @@ public class NetworkEditorController {
     @FXML
     private void initialize() {
         renderer = new NetworkRenderer(canvas.getGraphicsContext2D());
+        animator = new GiraffeAnimator(canvas.getGraphicsContext2D(), this::redraw);
+        // Stop a running animation timer once the canvas leaves the scene, so it
+        // does not keep firing in the background after the window is closed.
+        canvas.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene == null) {
+                animator.finishNow();
+            }
+        });
 
         // A Canvas is not resizable, so as a managed child it would pin the
         // holder's minimum size and stop the window from shrinking. Take it out
@@ -99,6 +108,8 @@ public class NetworkEditorController {
             toolGroup.selectToggle(old);
             return;
         }
+        // Commit any element still being drawn before switching context.
+        animator.finishNow();
         tool = (Tool) now.getUserData();
         pendingEdgeNode = null;
         highlightedNodeId = null;
@@ -126,6 +137,9 @@ public class NetworkEditorController {
         if (event.getButton() != MouseButton.PRIMARY) {
             return;
         }
+        // Commit any element still being drawn before hit-testing, so a fast
+        // second click sees the pending element and cannot create a duplicate.
+        animator.finishNow();
         double x = event.getX();
         double y = event.getY();
         switch (tool) {
@@ -152,7 +166,9 @@ public class NetworkEditorController {
         // Per the editing model, the NODE tool only adds nodes on empty space —
         // clicking an existing node must not stack an overlapping duplicate.
         if (findNodeAt(x, y).isEmpty()) {
-            network.addNode(x, y);
+            Vec2 p = new Vec2(x, y);
+            animateDraw(new DrawTarget(DrawTarget.Kind.NODE, p, p),
+                    () -> network.addNode(x, y));
         }
     }
 
@@ -166,8 +182,13 @@ public class NetworkEditorController {
         if (pendingEdgeNode == null) {
             pendingEdgeNode = node;
         } else if (!pendingEdgeNode.id().equals(node.id())) {
-            network.addEdge(pendingEdgeNode.id(), node.id());
+            Vec2 a = new Vec2(pendingEdgeNode.x(), pendingEdgeNode.y());
+            Vec2 b = new Vec2(node.x(), node.y());
+            String fromId = pendingEdgeNode.id();
+            String toId = node.id();
             pendingEdgeNode = null;
+            animateDraw(new DrawTarget(DrawTarget.Kind.EDGE, a, b),
+                    () -> network.addEdge(fromId, toId));
         }
     }
 
@@ -194,8 +215,30 @@ public class NetworkEditorController {
         }
 
         if (closestEdge != null) {
-            network.addSignal(closestEdge.id(), closestParam, selectedSide());
+            animateSignal(closestEdge, closestParam);
         }
+    }
+
+    private void animateSignal(TrackEdge edge, double param) {
+        TrackNode from = network.node(edge.fromNodeId()).orElseThrow();
+        TrackNode to = network.node(edge.toNodeId()).orElseThrow();
+        Vec2 a = new Vec2(from.x(), from.y());
+        Vec2 b = new Vec2(to.x(), to.y());
+        Side side = selectedSide();
+        Vec2 base = Geometry.pointAt(a, b, param);
+        Vec2 marker = Geometry.offsetPoint(a, b, param, NetworkRenderer.SIGNAL_OFFSET, side);
+        String edgeId = edge.id();
+        animateDraw(new DrawTarget(DrawTarget.Kind.SIGNAL, base, marker),
+                () -> network.addSignal(edgeId, param, side));
+    }
+
+    /** Plays the giraffe draw animation, then commits the new element to the model. */
+    private void animateDraw(DrawTarget target, Runnable commit) {
+        animator.play(target, () -> {
+            commit.run();
+            updateStatus();
+            redraw();
+        });
     }
 
     private Optional<TrackNode> findNodeAt(double x, double y) {
@@ -213,12 +256,14 @@ public class NetworkEditorController {
 
     @FXML
     private void onLoadSample() {
+        animator.finishNow();
         network = SampleNetworks.switzerland();
         resetInteraction();
     }
 
     @FXML
     private void onClear() {
+        animator.finishNow();
         network.clear();
         resetInteraction();
     }

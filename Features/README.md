@@ -12,3 +12,5 @@ In diesem Ordner werden die Anforderungen für neue Features dokumentiert.
 ## Enthaltene Dateien
 
 - [`feature-vorlage.md`](./feature-vorlage.md) – Vorlage für neue Feature-Anforderungen.
+- [`signale-erstellen-und-gleiskante-zuordnen.md`](./signale-erstellen-und-gleiskante-zuordnen.md) – Signale anlegen und einer Gleiskante zuordnen.
+- [`lustige-giraffe-animation.md`](./lustige-giraffe-animation.md) – Lustige Giraffe zeichnet neue Elemente animiert.
