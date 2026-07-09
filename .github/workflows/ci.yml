@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build:
+    name: Build & verify (Java 21)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      # Runs tests and all quality gates (Checkstyle, PMD, SpotBugs, JaCoCo).
+      # Headless: the app is never launched, so no display is required.
+      - name: Build and verify
+        run: mvn -B verify
+
+      - name: Upload reports on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-reports
+          path: |
+            target/site
+            target/checkstyle-result.xml
+            target/pmd.xml
+            target/spotbugsXml.xml
+            target/surefire-reports
+          if-no-files-found: ignore

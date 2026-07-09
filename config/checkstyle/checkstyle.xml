@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<!DOCTYPE module PUBLIC
+        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+        "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+<!--
+  Deliberately minimal: this config enforces the two architecture guardrails
+  from AGENTS.md and nothing else, so every rule earns its place.
+-->
+<module name="Checker">
+    <property name="severity" value="error"/>
+
+    <!-- Guardrail: a class file may not exceed 500 lines. -->
+    <module name="FileLength">
+        <property name="max" value="500"/>
+    </module>
+
+    <!-- Honour inline @SuppressWarnings("checkstyle:...") annotations. -->
+    <module name="SuppressWarningsFilter"/>
+
+    <module name="TreeWalker">
+        <module name="SuppressWarningsHolder"/>
+
+        <!-- Guardrail: methods and constructors take at most 3 parameters. -->
+        <module name="ParameterNumber">
+            <property name="max" value="3"/>
+            <property name="tokens" value="METHOD_DEF, CTOR_DEF"/>
+        </module>
+    </module>
+</module>
